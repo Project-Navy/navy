@@ -1,0 +1,12 @@
+navy.iso
+symbols.map
+kernel.elf
+build/
+local/
+tarballs/
+\#*\#
+*~
+.vscode/
+sysroot/bin/
+sysroot/boot/initramfs.tar
+target/
