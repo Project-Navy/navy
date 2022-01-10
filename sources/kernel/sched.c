@@ -87,7 +87,7 @@ void sched_init(void)
     memcpy(kernel_process->path, "Kernel", 7);
     kernel_process->pml = mmap_phys_to_io(arch_read_space());
 
-    assert(vec_push(&processes, kernel_process) == 0);
+    vec_push(&processes, kernel_process);
 
     arch_enable_scheduler();
     sched_is_init = true;
@@ -97,7 +97,7 @@ void task_slayer(void)
 {
     for(;;)
     {
-        for (int i = 0; i < processes.length; i++)
+        for (size_t i = 0; i < processes.length; i++)
         {
             process_t *proc = processes.data[i];
             if (proc->state == TASK_WAITINGFORDEATH)
@@ -161,27 +161,27 @@ process_t *task_init(char const *path, uintptr_t pml, uintptr_t rip, bool is_use
     return new_task;
 }
 
-int sched_push_process1(process_t *new_process)
+void sched_push_process1(process_t *new_process)
 {
-    return sched_push_process5(new_process, 0, 0, 0, 0);
+    sched_push_process5(new_process, 0, 0, 0, 0);
 }
 
-int sched_push_process2(process_t *new_process, uint64_t arg1)
+void sched_push_process2(process_t *new_process, uint64_t arg1)
 {
-    return sched_push_process5(new_process, arg1, 0, 0, 0);
+    sched_push_process5(new_process, arg1, 0, 0, 0);
 }
 
-int sched_push_process3(process_t *new_process, uint64_t arg1, uint64_t arg2)
+void sched_push_process3(process_t *new_process, uint64_t arg1, uint64_t arg2)
 {
-    return sched_push_process5(new_process, arg1, arg2, 0, 0);
+    sched_push_process5(new_process, arg1, arg2, 0, 0);
 }
 
-int sched_push_process4(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3)
+void sched_push_process4(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3)
 {
-    return sched_push_process5(new_process, arg1, arg2, arg3, 0);
+    sched_push_process5(new_process, arg1, arg2, arg3, 0);
 }
 
-int sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4)
+void sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4)
 {
     new_process->pid = last_pid++;
 
@@ -189,8 +189,6 @@ int sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, ui
     new_process->regs.rsi = arg2;
     new_process->regs.rdx = arg3;
     new_process->regs.rcx = arg4;
-
-    return vec_push(&processes, new_process) == 0;
 }
 
 process_t *sched_current_process(void)
@@ -200,7 +198,7 @@ process_t *sched_current_process(void)
 
 process_t *sched_get_by_pid(pid_t pid)
 {
-    if (processes.length > (int) pid && processes.data[pid]->state == TASK_RUNNING)
+    if (processes.length > pid && processes.data[pid]->state == TASK_RUNNING)
     {
         return processes.data[pid];
     }
@@ -208,19 +206,6 @@ process_t *sched_get_by_pid(pid_t pid)
     {
         return NULL;
     }
-}
-
-process_t *sched_get_by_name(char const *s)
-{
-    for (int i = 0; i < processes.length; i++)
-    {
-        if (strcmp(processes.data[i]->name, s) == 0)
-        {
-            return processes.data[i];
-        }
-    }
-
-    return NULL;
 }
 
 bool is_sched_init(void)

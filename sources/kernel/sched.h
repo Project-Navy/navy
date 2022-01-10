@@ -57,7 +57,7 @@ typedef struct process
     int return_value;
 } process_t;
 
-typedef vec_t(process_t *) vec_process_t;
+typedef Vec(process_t *) vec_process_t;
 
 #define __sched_push_impl2(n, ...) sched_push_process ## n(__VA_ARGS__)
 #define __sched_push_impl(n, ...) __sched_push_impl2(n, __VA_ARGS__)
@@ -73,10 +73,10 @@ void sched_init(void);
 void yield_task(registers_t *regs);
 process_t *task_init(char const *path, uintptr_t pml, uintptr_t rip, bool is_user);
 
-int sched_push_process1(process_t *new_process);
-int sched_push_process2(process_t *new_process, uint64_t arg1);
-int sched_push_process3(process_t *new_process, uint64_t arg1, uint64_t arg2);
-int sched_push_process4(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3);
-int sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4);
+void sched_push_process1(process_t *new_process);
+void sched_push_process2(process_t *new_process, uint64_t arg1);
+void sched_push_process3(process_t *new_process, uint64_t arg1, uint64_t arg2);
+void sched_push_process4(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3);
+void sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4);
 
 bool is_sched_init(void);
