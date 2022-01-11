@@ -23,6 +23,7 @@
 
 #include <navy/range.h>
 #include <navy/vec.h>
+#include <navy/ipc.h>
 
 #include "arch/arch.h"
 #include <stddef.h>
@@ -46,15 +47,12 @@ typedef struct process
 
     registers_t regs;
     pid_t pid;
-    char name[64];
-    char path[256];
     uintptr_t pml;
 
-    char *pledges;
-    char *execpledges;
-    
     enum TASK_STATE state;
     int return_value;
+
+    Vec(ipc_t) mailbox;
 } process_t;
 
 typedef Vec(process_t *) vec_process_t;
@@ -71,7 +69,7 @@ void task_slayer(void);
 
 void sched_init(void);
 void yield_task(registers_t *regs);
-process_t *task_init(char const *path, uintptr_t pml, uintptr_t rip, bool is_user);
+process_t *task_init(uintptr_t pml, uintptr_t rip);
 
 void sched_push_process1(process_t *new_process);
 void sched_push_process2(process_t *new_process, uint64_t arg1);

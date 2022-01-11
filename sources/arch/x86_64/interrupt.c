@@ -178,7 +178,7 @@ uint64_t interrupts_handler(uint64_t rsp)
 
         if (is_sched_init())
         {
-            print_format(arch_serial_puts, "PROCESS: {} ({})", sched_current_process()->path, sched_current_process()->pid);
+            print_format(arch_serial_puts, "PID: {}", sched_current_process()->pid);
         }
 
         arch_serial_puts("\n *** Backtrace *** \n");

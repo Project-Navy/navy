@@ -45,5 +45,6 @@ void vec_expand_(char **data, size_t *length, size_t *capacity, int memsz);
              ++(v)->iter)
 
 #define vec_free(v) free((v)->data)
+#define vec_pop(v) (v)->data[--(v)->length]
 
 typedef Vec(uint8_t) vec_uint8_t;

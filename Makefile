@@ -56,18 +56,26 @@ SRC = $(wildcard sources/libs/liballoc/*.c)     \
       sources/libs/navy/itoa.c
 
 BUILD_DIRECTORY := build
+APP_BUILD_DIRECTORY := build/pkg
 DIRECTORY_GUARD = @mkdir -p $(@D)
 SYSROOT = sysroot
 
+include sources/pkg/build.mk
 include sources/arch/$(CONFIG_ARCH)/build.mk
 
-OBJ = $(patsubst %.c, $(BUILD_DIRECTORY)/%.c.o, $(SRC)) \
+OBJ := $(patsubst %.c, $(BUILD_DIRECTORY)/%.c.o, $(SRC)) \
         $(patsubst %.s, $(BUILD_DIRECTORY)/%.s.o, $(ASRC))
+
 
 $(BUILD_DIRECTORY)/%.c.o: %.c
 	@$(DIRECTORY_GUARD)
 	@echo "[CC] $<"
 	@$(CC) $(KFLAGS) -c $< -o $@
+
+$(APP_BUILD_DIRECTORY)/%.c.o: %.c
+	@$(DIRECTORY_GUARD)
+	@echo "[CC] $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIRECTORY)/%.s.o: %.s
 	@$(DIRECTORY_GUARD)

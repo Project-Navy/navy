@@ -83,8 +83,6 @@ void sched_init(void)
     kernel_process->pid = 0;
     kernel_process->state = TASK_RUNNING;
 
-    memcpy(kernel_process->name, "Kernel", 7);
-    memcpy(kernel_process->path, "Kernel", 7);
     kernel_process->pml = mmap_phys_to_io(arch_read_space());
 
     vec_push(&processes, kernel_process);
@@ -93,7 +91,7 @@ void sched_init(void)
     sched_is_init = true;
 }
 
-void task_slayer(void)
+_Noreturn void task_slayer(void)
 {
     for(;;)
     {
@@ -105,39 +103,22 @@ void task_slayer(void)
                 kfree((void *) proc->syscall_kernel_bstack);
                 pmm_free(proc->stack);
                 arch_space_destroy((void *) proc->pml);
-
-                if (proc->pledges != NULL)
-                {
-                    kfree((void *) proc->pledges);
-                }
-
-                if (proc->execpledges != NULL)
-                {
-                    kfree((void *) proc->execpledges);
-                }
+                vec_free(&proc->mailbox);
             }
         }
     }
 }
 
-process_t *task_init(char const *path, uintptr_t pml, uintptr_t rip, bool is_user)
+process_t *task_init(uintptr_t pml, uintptr_t rip)
 {
     arch_acquire(&usertask_lock);
     process_t *new_task = kcalloc(sizeof(process_t));
 
-    memset(new_task->name, 0, 64);
-    memcpy(new_task->path, path, strlen(path));
-    new_task->pml = pml; 
+    new_task->pml = pml;
     new_task->state = TASK_RUNNING;
 
-    new_task->pledges = NULL;
-    new_task->execpledges = NULL;
-
-    if (is_user)
-    {
-        new_task->regs.cs = 0x23;
-        new_task->regs.ss = 0x1b;
-    }
+    new_task->regs.cs = 0x23;
+    new_task->regs.ss = 0x1b;
 
     new_task->regs.rip = rip;
 
@@ -145,6 +126,8 @@ process_t *task_init(char const *path, uintptr_t pml, uintptr_t rip, bool is_use
     new_task->syscall_kernel_stack = new_task->syscall_kernel_bstack + KERNEL_STACK_SIZE;
 
     new_task->stack = pmm_alloc(KERNEL_STACK_SIZE);
+    vec_init(&new_task->mailbox);
+
     assert(new_task->stack.length);
 
     arch_vmm_map((void *) new_task->pml,(range_t) {
@@ -189,6 +172,8 @@ void sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, u
     new_process->regs.rsi = arg2;
     new_process->regs.rdx = arg3;
     new_process->regs.rcx = arg4;
+
+    vec_push(&processes, new_process);
 }
 
 process_t *sched_current_process(void)

@@ -48,12 +48,21 @@ void kernel_splash(void)
     log("> Usable memory: {M} Usable pages: {}", pages * get_page_size(), pages);
 }
 
-void kmain([[gnu::unused]] handover_t const *handover)
+void kmain(handover_t const *handover)
 {
     kernel_splash();
     sched_init();
 
-    log("Microkernel is dead :(");
+    range_t test_range = handover_find_module(handover, "test_ipc");
+    assert(test_range.length);
+
+    process_t *test_ipc = load_elf_module(test_range);
+    process_t *test_ipc2 = load_elf_module(test_range);
+    process_t *test_ipc3 = load_elf_module(test_range);
+
+    sched_push_process(test_ipc);
+    sched_push_process(test_ipc2);
+    sched_push_process(test_ipc3);
 
     task_slayer();
 }

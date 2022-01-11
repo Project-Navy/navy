@@ -36,3 +36,19 @@ uint64_t syscall2(uint64_t syscall_id, uint64_t arg1);
 uint64_t syscall3(uint64_t syscall_id, uint64_t arg1, uint64_t arg2);
 uint64_t syscall4(uint64_t syscall_id, uint64_t arg1, uint64_t arg2, uint64_t arg3);
 uint64_t syscall5(uint64_t syscall_id, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4);;
+
+enum 
+{
+    SYS_IPC_SEND,
+    SYS_IPC_RCV_SYNC,
+    SYS_IPC_RCV_ONESHOT,
+    SYS_LOG,
+    SYS_ALLOC,
+    SYS_FREE,
+    SYS_REALLOC,
+    SYS_EXIT,
+    SYS_GETPID
+};
+
+void sys_log(char const *s);
+pid_t getpid(void);

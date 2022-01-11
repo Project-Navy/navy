@@ -30,9 +30,9 @@
 #include <navy/elf.h>
 #include <navy/macro.h>
 
-process_t *load_elf_module(range_t elf, char const *path, bool is_user)
+process_t *load_elf_module(range_t elf)
 {
-    log("Loading {a}-{a} ({})", elf.base, elf.base + elf.length, path);
+    log("Loading {a}-{a} ({})", elf.base, elf.base + elf.length);
 
     Elf64_Ehdr *header = (void *) elf.base;
     Elf64_Phdr *phdr = (void *)(elf.base + header->e_phoff);
@@ -55,5 +55,5 @@ process_t *load_elf_module(range_t elf, char const *path, bool is_user)
     }
 
     log("Entry: {a}", header->e_entry);
-    return task_init(path, pml, header->e_entry, is_user);
+    return task_init(pml, header->e_entry);
 }

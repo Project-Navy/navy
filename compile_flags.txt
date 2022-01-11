@@ -1,0 +1,3 @@
+-Isources/libs/
+-Isources/libs/ansi
+-DKERNEL=1

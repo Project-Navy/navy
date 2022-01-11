@@ -18,9 +18,88 @@
  */
 
 #include <stdint.h>
-#include "arch/arch.h"
+#include <unistd.h>
+#include <navy/ipc.h>
+#include <navy/debug.h>
+#include <assert.h>
 
-int64_t syscall_handler([[gnu::unused]] registers_t *regs)
+#include "arch/arch.h"
+#include "sched.h"
+
+typedef int64_t (*syscall_t)(registers_t *);
+
+int64_t syscall_exit(registers_t *regs)
 {
+    process_t *current = sched_current_process();
+    log("PID {} exited {}", current->pid, regs->rbx);
+    current->return_value = regs->rbx;
+    current->state = TASK_WAITINGFORDEATH;
+    for(;;);
+}
+
+int64_t syscall_log(registers_t *regs)
+{
+    char const *msg = (char const *) regs->rbx;
+    arch_serial_puts(msg);
+
     return 0;
+}
+
+int64_t syscall_getpid([[gnu::unused]] registers_t *regs)
+{
+    return sched_current_process()->pid;
+}
+
+int64_t syscall_ipcsend(registers_t *regs)
+{
+    ipc_t *msg = (void *) regs->rbx;
+    msg->sender = sched_current_process()->pid;
+
+    process_t *proc = sched_get_by_pid(msg->receiver);
+    assert(proc != NULL);
+
+    vec_push(&proc->mailbox, *msg);
+    return 0;
+}
+
+int64_t syscall_ipcrcv_sync(registers_t *regs)
+{
+    process_t *proc = sched_current_process();
+    ipc_t *msg = (void *) regs->rbx;
+
+    while (proc->mailbox.length == 0)
+    {
+        force_yield();
+    }
+
+
+    *msg = vec_pop(&proc->mailbox);
+    return 0;
+}
+
+int64_t syscall_ipcrcv_oneshot(registers_t *regs)
+{
+    process_t *proc = sched_current_process();
+    ipc_t *msg = (void *) regs->rbx;
+
+    if (proc->mailbox.length != 0)
+    {
+        *msg = vec_pop(&proc->mailbox);
+    }
+
+    return 0;
+}
+
+syscall_t syscall_matrix[] = {
+        [SYS_IPC_SEND] = syscall_ipcsend,
+        [SYS_IPC_RCV_SYNC] = syscall_ipcrcv_sync,
+        [SYS_IPC_RCV_ONESHOT] = syscall_ipcrcv_oneshot,
+        [SYS_LOG] = syscall_log,
+        [SYS_EXIT] = syscall_exit,
+        [SYS_GETPID] = syscall_getpid
+};
+
+int64_t syscall_handler(registers_t *regs)
+{
+    return syscall_matrix[regs->rax](regs);
 }

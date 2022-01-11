@@ -51,3 +51,13 @@ uint64_t syscall5(uint64_t syscall_id, uint64_t arg1, uint64_t arg2, uint64_t ar
 
     return syscall_return;
 }
+
+void sys_log(char const *s)
+{
+    syscall(SYS_LOG, (uintptr_t) s);
+}
+
+pid_t getpid(void)
+{
+    return syscall(SYS_GETPID);
+}
