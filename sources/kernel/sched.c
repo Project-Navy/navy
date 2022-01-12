@@ -166,6 +166,7 @@ void sched_push_process4(process_t *new_process, uint64_t arg1, uint64_t arg2, u
 
 void sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4)
 {
+    arch_acquire(&usertask_lock);
     new_process->pid = last_pid++;
 
     new_process->regs.rdi = arg1;
@@ -174,6 +175,7 @@ void sched_push_process5(process_t *new_process, uint64_t arg1, uint64_t arg2, u
     new_process->regs.rcx = arg4;
 
     vec_push(&processes, new_process);
+    arch_release(&usertask_lock);
 }
 
 process_t *sched_current_process(void)

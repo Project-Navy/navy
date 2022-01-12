@@ -17,6 +17,7 @@
 
 [ GLOBAL arch_acquire ]
 arch_acquire:
+    cli
     lock bts dword [rdi], 0
     jc .spin 
     ret 
@@ -30,4 +31,5 @@ arch_acquire:
 [ GLOBAL arch_release ]
 arch_release:
     mov dword [rdi], 0
+    sti
     ret

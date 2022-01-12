@@ -30,9 +30,13 @@
 #include <navy/elf.h>
 #include <navy/macro.h>
 
+static uint32_t lock;
+
 process_t *load_elf_module(range_t elf)
 {
-    log("Loading {a}-{a} ({})", elf.base, elf.base + elf.length);
+    arch_acquire(&lock);
+
+    log("Loading {a}-{a}", elf.base, elf.base + elf.length);
 
     Elf64_Ehdr *header = (void *) elf.base;
     Elf64_Phdr *phdr = (void *)(elf.base + header->e_phoff);
@@ -40,9 +44,9 @@ process_t *load_elf_module(range_t elf)
 
     for (size_t i = 0; i < header->e_phnum; i++)
     {
-        log("Mapping {a} -> {a} ({})", elf.base + phdr->p_offset, phdr->p_vaddr, phdr->p_type);
         if (phdr->p_type == PT_LOAD)
         {
+            log("Mapping {a} -> {a} ({})", elf.base + phdr->p_offset, phdr->p_vaddr, phdr->p_type);
             range_t addr = arch_pmm_alloc(ALIGN_UP(phdr->p_memsz, get_page_size()));
             assert(addr.length);
 
@@ -55,5 +59,8 @@ process_t *load_elf_module(range_t elf)
     }
 
     log("Entry: {a}", header->e_entry);
+
+    arch_release(&lock);
+
     return task_init(pml, header->e_entry);
 }

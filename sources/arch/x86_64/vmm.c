@@ -32,7 +32,7 @@
 #include <string.h>
 
 static struct pml *kernel_pml4;
-static uint32_t lock;
+static uint32_t lock = 0;
 
 struct pml *get_kernel_space(void)
 {
@@ -89,8 +89,6 @@ range_t vmm_get_pml(struct pml *pml, size_t index)
 
 void vmm_map_page(struct pml *pml, size_t virt, size_t phys, bool is_user)
 {
-    arch_acquire(&lock);
-
     range_t pml3_range = vmm_get_pml_alloc(pml, PML4_GET_INDEX(virt), true);
     struct pml *pml3 = (struct pml *) pml3_range.base;
 
@@ -101,13 +99,13 @@ void vmm_map_page(struct pml *pml, size_t virt, size_t phys, bool is_user)
     struct pml *pml1 = (struct pml *) pml1_range.base;
 
     pml1->entries[PML1_GET_INDEX(virt)] = pml_make_entry(phys, is_user);
-
-    arch_release(&lock);
 }
 
 void vmm_map_range(struct pml *pml, range_t virt, range_t phys, bool is_user)
 {
     assert(phys.length == virt.length);
+
+    arch_acquire(&lock);
 
     for (size_t i = 0; i < (virt.length / PAGE_SIZE); i++)
     {
@@ -116,6 +114,8 @@ void vmm_map_range(struct pml *pml, range_t virt, range_t phys, bool is_user)
 
         vmm_map_page(pml, virtaddr, physaddr, is_user);
     }
+
+    arch_release(&lock);
 
     vmm_flush(virt);
 }

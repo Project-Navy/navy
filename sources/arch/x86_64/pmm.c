@@ -22,6 +22,7 @@
 
 #include "consts.h"
 #include "kernel/debug.h"
+#include "arch/arch.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -32,6 +33,7 @@ uint8_t *bitmap = NULL;
 static size_t bitmap_size = 0;
 static size_t usable_pages = 0;
 static size_t last_page = 0;
+static uint32_t lock = 0;
 
 void bitmap_unused(size_t index)
 {
@@ -122,13 +124,19 @@ struct range pmm_find_pages(size_t amount)
 
 struct range pmm_alloc(size_t amount)
 {
+    arch_acquire(&lock);
     assert(usable_pages > 0);
-    return pmm_find_pages(amount);
+    struct range result = pmm_find_pages(amount);
+    arch_release(&lock);
+
+    return result;
 }
 
 void pmm_free(struct range range)
 {
+    arch_acquire(&lock);
     pmm_range_unused(range);
+    arch_release(&lock);
 }
 
 size_t get_usable_pages(void)
